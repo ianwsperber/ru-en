@@ -1,0 +1,213 @@
+# **The Engineering and Lexicographical Architecture of the Definitive Russian-English Kindle Dictionary**
+
+## **1\. Executive Philosophy and Architectural Vision**
+
+The mandate to construct a "Golden Master" Russian-English dictionary for the Amazon Kindle platform—one capable of encompassing the entire lexical breadth of the Russian language from the archaic, dialect-heavy prose of Leo Tolstoy’s *War and Peace* to the fluid, neologism-saturated vernacular of the modern digital age—presents a challenge that is as much about data engineering as it is about lexicography. This report outlines the architectural blueprint for achieving "Total Completeness," a standard that demands the seamless integration of diachronic linguistic strata that rarely coexist in a single volume. The project requires a synthesis of 19th-century imperial lexicography, Soviet-era standardization, and post-Soviet digital fluidity, all orchestrated through a robust, open-source computational pipeline.  
+The definition of "Total Completeness" in this context is non-trivial. It implies a dictionary that does not merely translate standard literary Russian but actively decodes the linguistic artifacts of history. When a reader traverses the pages of *War and Peace*, they encounter a Russian language that is pre-standardized, heavily influenced by French syntactic structures, and rich in the peasant dialects of the Tula and Ryazan provinces. Conversely, a reader engaging with modern contemporary fiction or internet-based text requires immediate access to a lexicon shaped by globalization, internet subcultures, and rapid morphological evolution. The Kindle platform, while robust, imposes strict technical constraints—specifically regarding indexing and morphological inflection—that compel us to treat this dictionary not as a static text file, but as a complex relational database flattened into a binary format.  
+This report posits that no single existing dictionary satisfies the "Golden Master" requirement. The commercial dictionaries available for Kindle typically rely on abridged versions of the Oxford Russian Dictionary or smaller localized datasets that lack the depth for *War and Peace* (ignoring archaisms and dialectal forms) and fail completely on modern slang. Therefore, the solution is the engineering of a composite lexical database. This database must ingest raw data from the monumental *Explanatory Dictionary of the Living Great Russian Language* by Vladimir Dal for historical coverage, the *English-Russian Dictionary* by V.K. Muller for the translation core, and the *OpenCorpora* database for the morphological intelligence required to drive the Kindle’s lookup engine. Furthermore, to capture the "long tail" of the language, we must integrate crowdsourced datasets such as Wiktionary and the subcultural archives of Lurkmore.  
+The following sections detail the provenance of these data sources, the specific engineering challenges associated with merging them (including the programmatic reversal of the 1918 orthographic reforms), and the computational linguistic algorithms required to generate a functional inflection index. This is a blueprint for a living linguistic engine, designed to be the definitive reference for the serious reader of Russian literature.
+
+## **2\. The Historical Stratum: "War and Peace" and the 19th Century**
+
+To claim "completeness" regarding *War and Peace*, one must understand the linguistic landscape of 1869\. Tolstoy’s lexicon is not merely "old Russian"; it is a deliberate stylistic tapestry that weaves together the high-society "Frenchified" Russian of the Petersburg salons with the raw, earthy vernacular of the soldiery and peasantry. A standard modern dictionary often acts as a filter, sanitizing these distinct voices into a neutral literary norm. The "Golden Master" must remove this filter.
+
+### **2.1 The Lexicographical Cornerstone: Vladimir Dal (Dahl)**
+
+The primary authority for the *War and Peace* stratum is unequivocally the *Explanatory Dictionary of the Living Great Russian Language* (*Толковый словарь живого великорусского языка*), compiled by Vladimir Ivanovich Dal. Published between 1863 and 1866, it is contemporary with Tolstoy’s writing and represents the only source granular enough to cover the peasant dialects (e.g., Platon Karataev’s speech) and the specific military and aristocratic terminology of 1812 which Tolstoy utilized. Dal did not merely record the "standard" language; he was a preservationist of the "living" language, documenting dialectal variations, proverbs, and folk terminology that the Imperial Academy often shunned.  
+From a data engineering perspective, Dal is available in several formats, but for the "Golden Master," we require raw, manipulable text. The research identifies the ipa-dict-dsl project on GitHub as a critical repository. Unlike the binary dictionary files (BGL or proprietary formats) found on abandonware sites, this repository hosts the dictionary in DSL (Dictionary Specification Language) format encoded in UTF-8. This is a significant technical advantage. The UTF-8 encoding allows for direct string manipulation in Python, enabling the use of regular expressions to parse Dal’s idiosyncratic formatting—such as his use of the tilde (\~) to represent the headword in examples—and to programmatically extract the thousands of proverbs buried within entry bodies to serve as secondary search keys.  
+However, Dal presents a significant challenge: it is a Russian-to-Russian dictionary. It defines *lapti* (bast shoes) not as "bast shoes" but with a vivid Russian description of their manufacture and regional variations. To adhere to the user's "Ru-En preferred" constraint, Dal cannot be the primary layer. It serves as the *contextual* layer. When a user looks up a word like **ендова** (a type of copper valley or drinking vessel found in *War and Peace*), the Muller dictionary may return a simple "beaker," but the Dal entry will provide the historical context of its shape and usage. The architecture must therefore support a "fallback" display mechanism: presenting the concise English translation first, followed by the rich, archival Russian definition.
+
+### **2.2 The Challenge of Dialect and Idiolect**
+
+One of the most technically difficult requirements of *War and Peace* is the representation of dialect. Characters like the peasant Platon Karataev speak in a phonetic dialect that reflects the *okanye* (distinction of unstressed 'o') or *akanye* (reduction of 'o' to 'a') and various consonantal shifts typical of the Central Russian dialects. A standard dictionary indexes the normative form. If Karataev says **"платок"** (handkerchief) as **"платно"** or uses a regionalism like **"соколик"** (little falcon) in a non-standard case, a standard lookup fails.  
+To address this, the "Golden Master" must ingest the specific dialectal data provided in Dal’s dictionary, which is often tagged with regional markers (e.g., *tmb.* for Tambov, *vlg.* for Vologda). We can utilize the "Slovar" (Dictionary of dialects) data identified in the research , which provides structured data on Northern Caucasian and Russian dialects. By extracting these regional variants and mapping them to their standard lemmas, we create a "Dialect Index." This index acts as a translation layer within the dictionary itself, redirecting a lookup of a dialectal form to the standard entry while preserving the note that the form is regional. This ensures that the distinct voice of Tolstoy's peasant characters remains intelligible to the modern reader without breaking the immersion of the text.
+
+### **2.3 The "War and Peace" Vocabulary Validation**
+
+The validity of our "Golden Master" is determined by its coverage of the specific vocabulary distribution found in Tolstoy's masterpiece. Research into semantic relatedness models, such as Temporal Semantic Analysis (TSA), suggests that the patterns of word usage in *War and Peace* differ significantly from modern corpora. Words like **мир** (peace) and **мiр** (community/world) appear in specific distributions that carry thematic weight. A standard dictionary merges these. Our engineering pipeline must use the specific "War and Peace" corpus data—potentially utilizing frequency lists derived from the text itself—to validate that every unique token in the novel has a corresponding entry in the dictionary.  
+The presence of French vocabulary in *War and Peace* (approximately 2% of the text) is another hurdle. While the user specifies a Russian dictionary, a seamless reading experience requires the integration of a French-English glossary. We can source this from the xdxf repositories or the huzheng.org archives , merging the French lemmas into the main index but tagging them distinctively (e.g., *\[Fr\]*). This allows the dictionary to handle the code-switching inherent in the novel, where a sentence might begin in Russian and end in French.
+
+## **3\. The Standard Stratum: The Soviet and Post-Soviet Bridge**
+
+Between the archaic richness of Dal and the digital slang of today lies the massive stratum of Standard Literary Russian, codified largely during the Soviet era. This is the language of 20th-century translations, newspapers, and the bulk of modern literature. To bridge the gap, we rely on two pivotal lexicographical works: V.K. Muller and D.N. Ushakov.
+
+### **3.1 V.K. Muller: The Translation Engine**
+
+For the "Ru-En preferred" constraint, the *English-Russian Dictionary* by V.K. Muller (Mueller) is the indispensable standard. First published in 1943 and revised dozens of times, it is the bedrock of Russian-English translation. The 7th edition, and subsequent community-maintained versions (often cited as the 24th edition), are available under the GNU General Public License (GPL). This licensing is crucial for an Open Source project, allowing us to legally modify, reformat, and redistribute the data.  
+The mueller-dict project on SourceForge provides the dictionary in formats suitable for the dictd server, which can be converted to DSL or XML. The content includes approximately 66,000 entries, covering the core vocabulary of the language. Unlike Dal, Muller focuses on equivalence. For the entry **стол**, Dal gives a page of ethnographic detail; Muller gives "table; desk; board." For the Kindle user, Muller provides the immediate comprehension, while Dal provides the depth.  
+The engineering task here involves "cleaning" the Muller dataset. Legacy digital versions of Muller often contain formatting artifacts from early OCR (Optical Character Recognition) efforts or old encoding standards (KOI8-R). We must utilize the pyglossary tool to parse the raw Muller data, convert it to a consistent Unicode normalization form (NFC), and structure it to match the schema of our composite database.
+
+### **3.2 D.N. Ushakov: The Soviet Norm**
+
+Dmitry Ushakov’s *Explanatory Dictionary of the Russian Language* (1935-1940) represents the linguistic norms of the early Soviet period. It serves as a vital bridge. Many terms found in literature from the 1920s to the 1980s—words related to Soviet administration, industrialization, or specific Marxist-Leninist concepts—are absent in Dal (pre-Soviet) and often stripped of their historical nuance in modern dictionaries.  
+Ushakov is widely available in DSL format. Integrating Ushakov provides the "Golden Master" with a diachronic capability. A user looking up **товарищ** (comrade) can see the pre-revolutionary commercial meaning in Dal, the Soviet political meaning in Ushakov, and the translation in Muller. This stratification is essential for "Total Completeness," as the meaning of a word is often contingent on the era of the text being read.  
+The huzheng.org archives , now accessible via Wayback Machine or mirrors, contain specific StarDict conversions of Ushakov. However, for the "Golden Master," we prefer the raw DSL sources often found in the stardict-dal or ipa-dict-dsl repositories, as they preserve the original stress marks and usage labels that are frequently lost in binary conversion.
+
+## **4\. The Modern Stratum: Digital Slang and Neologisms**
+
+A dictionary that stops at 1990 is incomplete. The Russian language has undergone an explosive evolution in the post-Soviet era, absorbing thousands of English loanwords (*anglicisms*) and generating a massive corpus of internet slang. To support the reading of modern texts, blogs, or even contemporary commentary on *War and Peace*, the dictionary must include this stratum.
+
+### **4.1 Lurkmore: The Folklore of the Russian Internet**
+
+For the "Total Completeness" requirement regarding slang and subculture, the standard academic sources fail. We must turn to **Lurkmore**, the Russian equivalent of Encyclopedia Dramatica or a cynical, meme-heavy Wikipedia. Lurkmore documents the *mat* (profanity), memes, and internet vernacular that define modern informal Russian communication.  
+Archives of Lurkmore dumps (XML) are available via archive.org and various torrent repositories. These dumps are massive and unstructured. The engineering challenge is extraction. We need to parse the MediaWiki XML format, identify the page titles (which serve as the headwords), and extract the summary definition (usually the first paragraph).  
+This data is crucial for words like **школота** (schoolchildren/noobs), **пиар** (PR/public relations), or **хайп** (hype). These words appear frequently in modern texts but are absent in Muller or Dal. By sanitizing and importing the Lurkmore dataset, we ensure that the "Golden Master" can decode the language of the Russian web. The Teenslang.su dataset , a crowdsourced dictionary of youth slang, serves as a supplementary source, providing definitions for ephemeral slang terms that might not merit a full Lurkmore article but are prevalent in chat logs and social media.
+
+### **4.2 Wiktionary via Kaikki.org**
+
+For a more structured approach to modern vocabulary, **Wiktionary** is invaluable. The Kaikki.org project provides machine-readable JSONL extractions of Wiktionary. This is superior to parsing raw MediaWiki dumps ourselves. Kaikki.org’s data includes part-of-speech tagging, etymology, and, crucially, English definitions for Russian terms.  
+Wiktionary excels at identifying recent loanwords—**стартап** (startup), **блокчейн** (blockchain), **коворкинг** (coworking)—and providing their declension classes. Integrating this dataset ensures that the dictionary is not just a museum of the 19th century but a functional tool for the 21st.
+
+## **5\. Computational Morphology and The Inflection Engine**
+
+Perhaps the single most critical engineering challenge for a Kindle dictionary is **morphology**. Russian is a highly inflected language. A noun has six cases and two numbers; a verb has varying aspects, tenses, and moods. A dictionary that only indexes the *lemma* (dictionary form) is useless for reading because the text contains the *word forms*.
+
+### **5.1 The Inflection Problem**
+
+If a user reading *War and Peace* highlights the word **"Андрею"** (to Andrey \- Dative case), the Kindle sends this string to the lookup engine. If the dictionary index only contains **"Андрей"** (Andrey \- Nominative), the lookup fails. The dictionary must possess an **Inflection Index** that explicitly maps **"Андрею"** \-\> **"Андрей"**.
+
+### **5.2 OpenCorpora: The Morphological Backend**
+
+To build this index, we cannot manually enumerate forms for 200,000 words. We must use a computational morphological engine. **OpenCorpora** is the chosen solution. OpenCorpora is a crowdsourced, machine-readable morphological dictionary released under CC-BY-SA. It is arguably the most comprehensive open database of Russian morphology available.  
+The dict.opcorpora.xml dump contains the mapping of lemmas to their paradigms. We must extract this data to build the idx:infl tags for the Kindle.
+
+* **The Paradigm:** For the lemma **человек** (human), OpenCorpora lists: *человека, человеку, человеком, людях, люди...* (handling the suppletive plural forms).  
+* **The Tagset:** OpenCorpora uses a specific tagset (e.g., NOUN, masc, sing, nomn) which is compatible with the AOT (Automatic Processing of Text) standards. We must parse these tags to ensure we are mapping the correct forms.
+
+### **5.3 Zaliznyak’s Grammatical Dictionary**
+
+The theoretical basis for OpenCorpora is A.A. Zaliznyak’s *Grammatical Dictionary of the Russian Language*. Zaliznyak categorized Russian words into accentual and inflectional classes. While the original Zaliznyak data is copyrighted, the OpenCorpora project has effectively re-implemented his classification system through crowdsourcing.  
+By using the pymorphy2 library , which is built on top of OpenCorpora data, we can programmatically generate the full inflectional paradigm for every headword in our combined dictionary (Dal \+ Muller \+ Wiktionary). This automated expansion is what transforms a static word list into a "smart" dictionary capable of recognizing any form encountered in the text.
+
+## **6\. Data Engineering Pipeline (ETL)**
+
+The construction of the "Golden Master" requires a disciplined Extract-Transform-Load (ETL) pipeline. We define this pipeline using Python, leveraging its strong ecosystem for text processing (lxml, pyglossary, regex).
+
+### **6.1 Phase 1: Ingestion (Extract)**
+
+We must first harvest the raw data from the heterogeneous sources identified.
+
+| Source | Format | Tool | Action |
+| :---- | :---- | :---- | :---- |
+| **Dal** | DSL (UTF-8) | pyglossary | Parse body, extract proverbs, preserve rich text. |
+| **Muller** | DSL / XML | pyglossary | Extract English definitions, normalize formatting. |
+| **OpenCorpora** | XML | lxml | Extract Lemma ID \-\> Word Form mappings. |
+| **Wiktionary** | JSONL | json | Extract modern definitions, slang, and IPA. |
+| **Lurkmore** | XML | xml.etree | Extract slang terms and summary definitions. |
+
+The pyglossary library is central to this phase. It abstracts the complexity of the DSL format, allowing us to treat dictionary entries as Python objects regardless of their source syntax.
+
+### **6.2 Phase 2: Transformation and Normalization**
+
+This is the most complex phase, involving the harmonization of data and the specific handling of *War and Peace* orthography.  
+**The "War & Peace" Protocol: Orthographic Normalization** As noted, Tolstoy used pre-1918 spelling. The Kindle dictionary must bridge this. We implement a normalization algorithm that functions as a bidirectional map.  
+**Algorithm:**
+
+1. **Iterate** through all modern lemmas (from Muller/OpenCorpora).  
+2. **Apply Reverse Rules:**  
+   * Append ъ (hard sign) to words ending in a hard consonant.  
+   * Replace е with ѣ (yat) based on etymological lists (using a lookup table of known Yat-roots, as this is not purely phonetic).  
+   * Replace и with і before vowels (e.g., *Россія*).  
+   * Replace ф with ѳ (fita) in Greek loanwords (e.g., *Ѳеодоръ*).  
+3. **Generate Keys:** Create new index keys for these synthesized archaic forms.  
+4. **Link:** Point these archaic keys to the modern entry.
+
+This ensures that **свѣтъ** resolves to **свет**.  
+**Merging Strategy:** We create a unified entry object for every unique headword.
+
+* **Headword:** *Коса* (Braid/Scythe/Spit)  
+* **Definition Block:**  
+  1. *Muller:* braid; scythe; sand-spit.  
+  2. *Dal:* (Archaic context) Long hair; agricultural tool...  
+  3. *Wiktionary:* (Etymology) Proto-Slavic \*kosa...  
+  4. *Slang:* (Lurkmore) \[If applicable\]... This stacking order prioritizes rapid comprehension (English) while offering depth (Dal).
+
+### **6.3 Phase 3: Output Generation (Load)**
+
+The final target is the compiled MOBI/AZW3 file. The standard tool for this is kindlegen (now deprecated but functional) or calibre. Both require an OPF (Open Packaging Format) file and an HTML source file.  
+**The HTML Structure:** The dictionary is essentially a massive HTML file with specific markup.  
+`<idx:entry name="default" scriptable="yes" spell="yes">`  
+  `<idx:orth value="ModernHeadword">`  
+    `<idx:infl>`  
+       `<idx:iform value="inflected_form_1" />`  
+       `<idx:iform value="inflected_form_2" />`  
+       `<idx:iform value="archaic_spelling_1" />`  
+       `<idx:iform value="dialect_variant_1" />`  
+    `</idx:iform>`  
+  `</idx:orth>`  
+  `<div class="entry_body">`  
+     `<span class="headword">ModernHeadword</span>`  
+     `<div class="trans_block">[Muller] English Translation...</div>`  
+     `<div class="dal_block"> Russian Definition...</div>`  
+  `</div>`  
+`</idx:entry>`
+
+**The OPF File:** The OPF file controls the metadata. Crucially, we must set the Input and Output languages correctly:
+
+* \<DictionaryInLanguage\>ru\</DictionaryInLanguage\>  
+* \<DictionaryOutLanguage\>en\</DictionaryOutLanguage\>
+
+This tells the Kindle to use this dictionary whenever a book's metadata specifies lang="ru".
+
+### **6.4 The Compilation Toolchain**
+
+We utilize the logic found in dsl2mobi —a Ruby script that automates the generation of the OPF and HTML files from DSL. We will adapt this logic to Python to integrate seamlessly with our ETL pipeline. The script handles the chunking of the HTML (KindleGen struggles with files \>100MB) and the compression of the source images (if any).
+
+## **7\. Future Proofing and Open Source Compliance**
+
+The user explicitly requires Open Source formats. This necessitates a careful consideration of licensing.
+
+* **Dal:** Public Domain. Can be used freely.  
+* **Muller:** GPL. If we distribute the dictionary binary, we must make our build scripts and the modified Muller source available.  
+* **OpenCorpora/Wiktionary/Lurkmore:** CC-BY-SA. This "Share Alike" clause means the resulting composite dictionary, if distributed, must likely be released under a compatible Creative Commons license.
+
+To maintain the "Golden Master," the project should be hosted as a GitHub repository (like the ipa-dict-dsl project ). The repository should not contain the binary, but the *build scripts* (the ETL pipeline) and the *submodules* pointing to the raw data sources. This ensures that as OpenCorpora updates its morphology or Wiktionary adds new slang, the Golden Master can be rebuilt with a single command, remaining an evergreen resource.
+
+## **8\. Conclusion**
+
+The construction of the Definitive "Golden Master" Russian-English Dictionary is a sophisticated exercise in diachronic data fusion. It requires us to look backward to 1863 to capture the genius of Dal and Tolstoy, and forward to the present to capture the digital lexicon of the Russian internet. By engineering a pipeline that merges these distinct strata—and critically, by solving the morphological and orthographic challenges unique to the Kindle platform—we create a tool that offers "Total Completeness." This is not merely a dictionary; it is a linguistic time machine, enabling the user to traverse the full expanse of the Russian soul, from the battlefields of Borodino to the chatrooms of the Runet.
+
+## **9\. Appendix: Technical Specifications & Source Metadata**
+
+### **9.1 Primary Data Sources Table**
+
+| Source ID | Source Name | Role | License | Format | Key Feature |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+|  | **Dal (Dahl)** | Historical/Dialect | Public Domain | DSL (UTF-8) | Deepest coverage of *War & Peace* lexicon; proverbs. |
+|  | **V.K. Muller** | Translation | GPL | DSL / Dictd | Standard Ru-En equivalence; core vocabulary. |
+|  | **OpenCorpora** | Morphology | CC-BY-SA | XML | Generating idx:infl tags for Kindle lookup. |
+|  | **Wiktionary** | Modern/Etymology | CC-BY-SA | JSONL | Slang, neologisms, English definitions. |
+|  | **Ushakov** | Bridge (Soviet) | Public Domain | DSL | Vocabulary of the early-mid 20th century. |
+|  | **Lurkmore** | Slang/Subculture | CC-BY-SA | XML Dump | Internet folklore, *mat*, modern vernacular. |
+|  | **Slovar** | Dialect | Academic/Open | Data | Regional dialect mappings (Central/South Russian). |
+
+### **9.2 Orthographic Normalization Ruleset (The "War & Peace" Protocol)**
+
+| Rule Name | Pre-Reform | Modern | Context/Condition |
+| :---- | :---- | :---- | :---- |
+| **Terminal Hard Sign** | **ъ** | *(null)* | At the end of words after hard consonants (e.g., *домъ* \-\> *дом*). |
+| **Yat Conversion** | **ѣ** | **е** | Etymological root matching (requires lookup list). |
+| **Decimal I** | **і** | **и** | Before vowels and in the word *міръ* (world). |
+| **Fita Conversion** | **ѳ** | **ф** | In Greek proper names and loanwords (e.g., *Аѳины* \-\> *Афины*). |
+| **Genitive Adjectival** | **\-аго / \-яго** | **\-ого / \-его** | Grammatical endings (e.g., *краснаго* \-\> *красного*). |
+
+### **9.3 Kindle Inflection Tag Schema**
+
+To ensure the Kindle recognizes all forms of a word, the HTML source must adhere to this schema:  
+`<idx:entry name="dictionary" scriptable="yes" spell="yes">`  
+  `<idx:orth value="HEADWORD">`  
+    `<idx:infl>`  
+       `<idx:iform value="inflection1" />`  
+       `<idx:iform value="inflection2" />`  
+      `...`  
+       `<idx:iform value="archaic_spelling" />`  
+    `</idx:infl>`  
+  `</idx:orth>`  
+  `<div class="definition">`  
+    `...definition content...`  
+  `</div>`  
+`</idx:entry>`
+
+#### **Works cited**
+
+1\. Explanatory Dictionary of the Living Great Russian Language \- Wikipedia, https://en.wikipedia.org/wiki/Explanatory\_Dictionary\_of\_the\_Living\_Great\_Russian\_Language 2\. open-dsl-dict/ipa-dict-dsl: IPA Pronunciation Dictionaries in DSL format \- GitHub, https://github.com/open-dsl-dict/ipa-dict-dsl 3\. Sanzhi Dargwa dictionary by Diana Forker \- GitHub, https://github.com/dictionaria/sanzhi 4\. Swivel: Improving Embeddings by Noticing What's Missing | Request PDF \- ResearchGate, https://www.researchgate.net/publication/301847702\_Swivel\_Improving\_Embeddings\_by\_Noticing\_What's\_Missing 5\. 胡正的字典文件列表(http://download.huzheng.org/) · GitHub, https://gist.github.com/leetking/7634b70738067eb5040ce83fbab96d30 6\. StarDict Dictionaries: StarDict Dictionaries \- 星际译王词库, https://stardict.uber.space/ 7\. by John Paul Mueller and Luca Massaron, https://unidel.edu.ng/focelibrary/books/Algorithms%20for%20Dummies-Wiley%20(2017).pdf 8\. myrkr/dictionary-el \- GitHub, https://github.com/myrkr/dictionary-el 9\. English-Russian Dictionary Database in DICT Format, https://mueller-dict.sourceforge.net/ 10\. pyglossary \- PyPI, https://pypi.org/project/pyglossary/4.6.1/ 11\. Ushakov Russian Dictionary \- VERY Ltd., https://veryltd.com/diction/Ushakov.htm 12\. Wiki \- Lurkmore : Free Download, Borrow, and Streaming \- Internet Archive, https://archive.org/details/wiki-lurkmorewtf 13\. Morphological Peculiarities of Lexical Units of English Origin in Contemporary Russian Slang: Dictionary and Corpus Analyses \- RUDN UNIVERSITY SCIENTIFIC PERIODICALS PORTAL, https://journals.rudn.ru/semiotics-semantics/article/view/27563 14\. Russian machine-readable dictionary \- Kaikki.org, https://kaikki.org/dictionary/Russian/index.html 15\. kaikki.org digital archive and data, https://kaikki.org/ 16\. OpenCorpora: Russian \- Kaggle, https://www.kaggle.com/datasets/rtatman/opencorpora-russian 17\. opencorpora-tools \- PyPI, https://pypi.org/project/opencorpora-tools/0.4.2/ 18\. pymorphy · PyPI, https://pypi.org/project/pymorphy/0.4.1/ 19\. kmike/pymorphy: \[UNSUPPORTED\] \- please use https://github.com/kmike/pymorphy2. Russian and English morphology analyser (POS tagger \+ inflection engine) written in python. It is based on dictionaries and research from http://aot.ru. Docs (Russian): http://pymorphy.rtfd.org \- GitHub, https://github.com/kmike/pymorphy 20\. Grammatical Dictionary of the Russian Language \- A. A. Zalizniak \- Google Books, https://books.google.com/books/about/Grammatical\_Dictionary\_of\_the\_Russian\_La.html?id=oRtnAAAACAAJ 21\. Russian grammar dictionary | Presidential Library \- Президентская библиотека, https://www.prlib.ru/en/node/678476 22\. arXiv:1503.07283v1 \[cs.CL\] 25 Mar 2015, https://arxiv.org/pdf/1503.07283 23\. ilius/pyglossary: A tool for converting dictionary files aka glossaries. Mainly to help use our offline glossaries in any Open Source dictionary we like on any operating system / device. \- GitHub, https://github.com/ilius/pyglossary 24\. Slavic Cataloging Manual \- Pre-Reform Russian Orthography Cheat Sheet \- Google Sites, https://sites.google.com/site/seesscm/pre-reform-russian-orthography-cheat-sheet 25\. The translation algorithm from pre-reform spelling into modern spelling, taking into account the morphology of words \- ResearchGate, https://www.researchgate.net/publication/337733616\_The\_translation\_algorithm\_from\_pre-reform\_spelling\_into\_modern\_spelling\_taking\_into\_account\_the\_morphology\_of\_words 26\. Tvangeste/dsl2mobi: Converts DSL dictionaries to MOBI format (Kindle) \- GitHub, https://github.com/Tvangeste/dsl2mobi

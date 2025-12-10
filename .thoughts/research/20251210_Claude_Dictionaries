@@ -1,0 +1,290 @@
+# Russian Lexical Resources for Kindle Dictionary Development
+
+Building a comprehensive Russian-English Kindle dictionary that handles both 19th-century literary Russian and modern vocabulary requires combining multiple specialized sources. **The optimal approach uses Wiktionary (Kaikki.org) as the primary Ru-En source, Dal’s dictionary for historical coverage, OpenCorpora for morphological generation, and OPUS parallel corpora for modern usage—a combination that surpasses any single resource.**
+
+The Big Academic Dictionary (БАС), which would be the most comprehensive single source, has **no publicly available digital version**—a critical finding that shapes the recommended multi-source strategy.
+
+-----
+
+## Monolingual Russian dictionaries provide the historical foundation
+
+### Vladimir Dal’s Dictionary (Толковый словарь Даля, 1863-1866)
+
+Dal’s dictionary is indispensable for 19th-century Russian, containing approximately **200,000 entries** covering peasant dialects, folk vocabulary, regional expressions, and archaic terms that appear throughout Tolstoy’s works.
+
+|Source |Format |Download |
+|-----------------|----------------|---------------------------------------------|
+|dic.1963.ru |ABBYY Lingvo DSL|`https://cloud.mail.ru/public/QeAV/ei7xfEPGi`|
+|Thai Dict Project|StarDict/XDXF |Via rutracker.org (V-I-C edition, 2021) |
+|mova.org archives|dictd format |Part of standard StarDict collections |
+
+**License:** Public Domain (original work from 1880s)
+
+**War & Peace suitability:** Excellent—essential for understanding archaic terms, Church Slavonic elements, peasant speech patterns, and 19th-century vocabulary. Dal was Tolstoy’s contemporary, and this dictionary captures the linguistic texture of that era.
+
+**Modern suitability:** Limited—no post-1866 vocabulary, but invaluable as a historical layer.
+
+### Ushakov’s Dictionary (Толковый словарь Ушакова, 1935-1940)
+
+This dictionary bridges pre-revolutionary and early Soviet Russian, containing **87,454 headwords** with usage examples and stylistic labels.
+
+|Source |Format |Download |
+|-----------------|--------------------|---------------------------------------------------------------------------------|
+|dic.1963.ru |DSL (v2.1, Feb 2022)|`https://cloud.mail.ru/public/QeAV/ei7xfEPGi` |
+|Thai Dict Project|StarDict |`https://docs.google.com/uc?id=1WFbt3PsmwyOn6ccy-H6mmZt6fTreX9gq&export=download`|
+
+**License:** Public Domain (Soviet publication, 70+ years old)
+
+**War & Peace suitability:** Good—includes literary vocabulary and pre-revolutionary terms with explanations.
+
+**Modern suitability:** Moderate—covers vocabulary through the 1930s but lacks contemporary terms.
+
+### The Big Academic Dictionary does not exist in open digital form
+
+**БАС (Большой академический словарь)** would theoretically be the most valuable source with **150,000+ entries** across 30 volumes representing the most comprehensive Russian dictionary ever compiled. However, extensive research confirms:
+
+- Published by the Institute of Linguistic Studies (ИЛИ РАН) as an ongoing print project since 2004
+- An internal database exists from a 2008 card catalog digitization, but it remains inaccessible
+- No DSL, StarDict, XML, or any machine-readable format is publicly available
+- Commercial print editions only through publisher “Наука”
+
+**This is the single largest gap in open Russian lexicography.**
+
+### Ozhegov and alternative dictionaries
+
+Ozhegov’s dictionary exists in StarDict format but with reduced coverage (~38,837 entries versus the claimed 80,000). A better alternative is **МАС (Малый академический словарь)** with 80,000+ words, available from Thai Dict Project:
+
+`https://docs.google.com/uc?id=1T4O70CkVlMWJS_gL5jJwYSzlnxUlJbId&export=download`
+
+-----
+
+## Bilingual sources form the translation layer
+
+### Wiktionary via Kaikki.org delivers the highest-value extraction
+
+Kaikki.org processes raw Wiktionary dumps into structured JSONL with all templates expanded, making it dramatically superior to raw XML dumps for dictionary extraction.
+
+**Russian-specific download:** `https://kaikki.org/dictionary/Russian/kaikki.org-dictionary-Russian.jsonl`
+
+|Metric |Value |
+|----------------|-----------------------------------------------------------------|
+|Entry count |**424,943** distinct Russian word forms |
+|Senses breakdown|235,317 noun senses, 217,329 verb senses, 22,220 adjective senses|
+|Format |JSONL (one JSON object per line) |
+|Size |771.6 MB |
+|License |CC BY-SA |
+|Last updated |December 6, 2025 |
+
+**Included data:** Definitions in English, etymologies, IPA pronunciation, inflection tables (declensions/conjugations), grammatical labels, usage examples, topic categories.
+
+**Kaikki vs raw Wikimedia dumps:** Raw XML at `dumps.wikimedia.org/enwiktionary/` requires template expansion, Lua macro processing, and language filtering—months of development work that Kaikki.org eliminates. The pre-parsed JSONL is ready for dictionary conversion.
+
+**War & Peace suitability:** Good—Wiktionary has reasonable coverage of literary and archaic terms with etymological notes.
+
+**Modern suitability:** Excellent—continuously updated with contemporary vocabulary, technical terms, and slang.
+
+### Mueller7 remains the only open-source edition
+
+The V.K. Müller dictionary (7th edition, 1961) is available at `https://mueller-dict.sourceforge.net/` with **46,231 entries**.
+
+|Format |Availability |
+|-------------------|------------------------------------------------|
+|DICT (dictd server)|Primary format |
+|StarDict |stardict-mueller7accentgpl-2.4.2.tar.bz2 |
+|Raw text |Multiple encodings (UTF-8, KOI8-R, Windows-1251)|
+
+**License:** GNU GPL v2.0+
+
+**No newer open-source versions exist.** Commercial publications from AST/Эксмо claim 120,000-500,000 entries but are proprietary. The 1996 GPL release by S. Starostin remains definitive for open-source use.
+
+**War & Peace suitability:** Moderate—mid-20th century vocabulary captures some literary terms.
+
+**Modern suitability:** Poor—no vocabulary after 1961; missing all contemporary technical, internet, and slang terms.
+
+### OpenRussian offers modern morphological data
+
+The community-driven OpenRussian database at `https://github.com/Badestrand/russian-dictionary` provides:
+
+- CSV files (nouns.csv, verbs.csv, adjectives.csv) with full paradigms
+- Stress marks on all words
+- ~32,000 frequency-ranked words
+- Example sentences from Tatoeba
+- License: CC BY-SA 4.0
+
+**Limitation:** Does not prioritize archaic vocabulary.
+
+-----
+
+## Morphological resources enable inflection lookup
+
+A Kindle dictionary must handle Russian’s complex morphology—users may look up any inflected form (genitive plural, past perfective, etc.) and expect to find the lemma. Three key resources address this:
+
+### OpenCorpora provides the primary morphological database
+
+**Direct downloads:**
+
+- XML (compressed): `http://opencorpora.org/files/export/dict/dict.opcorpora.xml.bz2`
+- ZIP version: `http://opencorpora.org/files/export/dict/dict.opcorpora.xml.zip`
+
+|Metric |Value |
+|----------|------------|
+|Lemmas |389,232 |
+|Word forms|5,097,247 |
+|Format |UTF-8 XML |
+|License |CC BY-SA 3.0|
+
+Each lemma includes all grammatical forms with feature tags (case, number, gender, tense, aspect, etc.). This is the foundation for pymorphy2/pymorphy3 morphological analyzers.
+
+**Coverage:** Modern standard Russian; limited archaic/dialectal forms.
+
+### Zaliznyak’s dictionary is now officially digitized
+
+The authoritative grammatical reference (~110,000 words with complete paradigms) has an official machine-readable version:
+
+**Repository:** `https://github.com/gramdict/zalizniak-2010`
+
+|Feature |Detail |
+|--------|---------------------------------------------------------------------|
+|Edition |6th (2010), official data from rights holder |
+|Format |Plain text files organized by last letter (А.txt–Я.txt) |
+|License |CC BY-NC (non-commercial); commercial licensing via human@gramdict.ru|
+|Coverage|Full paradigms, stress marking, difficulty annotations |
+
+**Alternative sources:**
+
+- odict.ru: Zaliznyak + ~8,000 additions (CC BY-SA 3.0)
+- StarlingDB: Online searchable interface at starlingdb.org
+
+### pymorphy3 compiles OpenCorpora for runtime use
+
+The pymorphy2/pymorphy3 Python libraries use OpenCorpora as their data source, compiling it to DAWG (Directed Acyclic Word Graph) format for efficient lookup:
+
+**Installation:** `pip install pymorphy3-dicts-ru`
+
+The compiled dictionaries work across implementations (Python pymorphy3, Java jmorphy, JavaScript Az.js, Rust rsmorphy).
+
+-----
+
+## Parallel corpora supplement modern vocabulary gaps
+
+Traditional dictionaries lag behind contemporary usage. OPUS parallel corpora fill this gap:
+
+### OpenSubtitles captures colloquial and slang vocabulary
+
+The largest OPUS collection at **20 billion sentence pairs** from movie and TV subtitles provides authentic modern Russian including youth slang, profanity, and colloquial constructions absent from traditional dictionaries.
+
+**Access:** `https://opus.nlpl.eu/OpenSubtitles/corpus/version/OpenSubtitles` (v2024, Feb 2025)
+
+**Processing approach:** Word alignment tools (eflomal, GIZA++) can extract high-confidence translation pairs that supplement dictionary entries.
+
+### Tatoeba provides curated example sentences
+
+At **8.7 million sentence pairs** with CC-BY 2.0 license, Tatoeba offers human-verified translations ideal for dictionary usage examples:
+
+- Direct download: `https://tatoeba.org/en/downloads`
+- HuggingFace: Helsinki-NLP/tatoeba_mt
+
+### Technical vocabulary from software localization
+
+**KDE4** (201M sentence pairs) and **GNOME** (225M sentence pairs) corpora at opus.nlpl.eu contain software UI terminology, IT vocabulary, and modern technical terms rarely found in traditional dictionaries.
+
+-----
+
+## Additional resources expand coverage
+
+### natasha/corus aggregates 350GB+ of Russian text
+
+The `https://github.com/natasha/corus` project links 20+ corpora with Python loaders:
+
+|Corpus |Size |Value |
+|---------------|------------------|---------------------|
+|Lib.rus.ec |145GB (302K texts)|Literary Russian |
+|Mokoron Twitter|17.6M tweets |Social media language|
+|Taiga Social |648MB |Social network posts |
+|Taiga Subtitles|909MB |Colloquial dialogue |
+
+### HuggingFace offers ready-to-use datasets
+
+Notable resources:
+
+- `Den4ikAI/russian_dialogues_2`: 1.7M conversational contexts (272 MB)
+- `RussianNLP/russian_super_glue`: Word sense disambiguation data
+- `Helsinki-NLP/opus-mt-ru-en`: Pre-trained translation pairs
+
+### Russian National Corpus limitations
+
+The full RNC at ruscorpora.ru is **not downloadable**, but derived resources exist:
+
+- Python API: `https://github.com/kunansy/RNC` (rate-limited)
+- Leeds frequency lists: `http://corpus.leeds.ac.uk/ruscorpora.html` (116M words)
+- UD SynTagRus: 900K tokens with syntactic annotation at `github.com/UniversalDependencies/UD_Russian-SynTagRus`
+
+-----
+
+## Comprehensive source comparison for the Kindle dictionary use case
+
+|Source |Entries |License |19th-Century|Modern |Format |
+|-------------------------|--------------|-------------|------------|---------|-------------|
+|**Kaikki.org Wiktionary**|424,943 |CC BY-SA |Good |Excellent|JSONL |
+|**Dal’s Dictionary** |~200,000 |Public Domain|Excellent |None |DSL/StarDict |
+|**OpenCorpora** |389,232 lemmas|CC BY-SA 3.0 |Limited |Good |XML |
+|**Zaliznyak** |~110,000 |CC BY-NC |Limited |Good |Text |
+|**Mueller7** |46,231 |GPL v2+ |Moderate |Poor |DICT/StarDict|
+|**OpenRussian** |~32,000 |CC BY-SA 4.0 |Poor |Good |CSV |
+|**OpenSubtitles** |20B sentences |Mixed |None |Excellent|TMX/Moses |
+
+-----
+
+## The optimal combination strategy
+
+**Is Wiktionary + Dal the best combination?** It’s a strong foundation, but incomplete. The recommended architecture:
+
+### Layer 1: Primary translation source
+
+**Kaikki.org Wiktionary** (424,943 entries) provides the broadest English definitions and serves as the main lookup database.
+
+### Layer 2: Historical vocabulary enrichment
+
+**Dal’s Dictionary** (200,000 entries) supplies 19th-century terms, dialects, and archaic vocabulary for *War and Peace* compatibility. Entries without Wiktionary coverage get definitions translated/adapted from Dal.
+
+### Layer 3: Morphological generation
+
+**OpenCorpora** generates all inflected forms that redirect to lemma entries, ensuring любил → любить, городов → город lookups succeed.
+
+### Layer 4: Modern vocabulary supplementation
+
+**OpenSubtitles + Tatoeba** sentence pairs, processed through word alignment, add contemporary slang and usage examples missing from traditional dictionaries.
+
+### Layer 5: Quality refinement
+
+**OpenRussian** adds stress marks and verified translations for its coverage range; **Zaliznyak** provides authoritative paradigm validation.
+
+### What this combination provides:
+
+- **19th-century coverage:** Dal + Wiktionary etymologies + Ushakov bridge vocabulary
+- **Modern coverage:** Wiktionary + OpenSubtitles slang + KDE4/GNOME technical terms
+- **Complete morphology:** OpenCorpora’s 5M+ word forms ensure any inflected lookup works
+- **Translation quality:** Multiple source cross-validation
+
+### What remains unavailable:
+
+БАС (Big Academic Dictionary) would add ~50,000 additional refined literary entries unavailable through any open source. This gap cannot currently be filled with public data.
+
+-----
+
+## Technical implementation path
+
+**Conversion workflow for Kindle:**
+
+1. Parse Kaikki.org JSONL into dictionary entries with definitions
+1. Merge Dal DSL entries (convert via pyglossary) for historical terms
+1. Generate inflection redirects from OpenCorpora XML
+1. Export to MOBI using kindlegen or the Vuizur/Wiktionary-Dictionaries methodology at `github.com/Vuizur/Wiktionary-Dictionaries`
+
+**Key tools:**
+
+- pyglossary: Format conversion between DSL, StarDict, and other formats
+- pymorphy3: Runtime morphological analysis for form generation
+- lsdreader: Decompile commercial LSD to DSL if needed
+
+This multi-source approach—rather than any single dictionary—achieves the most complete coverage across the 150+ year span from Tolstoy to contemporary Russian.
