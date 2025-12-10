@@ -71,7 +71,6 @@ download "https://github.com/gramdict/zalizniak-2010/archive/refs/heads/master.z
 download "https://archive.org/download/wiki-lurkmorewtf/wiki-lurkmorewtf_wiki.tar.gz" \
   "${DATA_DIR}/lurkmore/wiki-lurkmorewtf_wiki.tar.gz"
 
-
 # ---------------------------------------------------------------------------
 # OPTIONAL
 # ---------------------------------------------------------------------------
