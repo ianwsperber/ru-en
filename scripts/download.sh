@@ -100,12 +100,6 @@ download "https://github.com/gramdict/zalizniak-2010/archive/refs/heads/master.z
   "${DATA_DIR}/zalizniak/zalizniak-2010-master.zip"
 
 # ---------------------------------------------------------------------------
-# Lurkmore XML dump (slang/subculture, CC BY-SA)
-# ---------------------------------------------------------------------------
-download "https://archive.org/download/wiki-lurkmorewtf/wiki-lurkmorewtf_wiki.tar.gz" \
-  "${DATA_DIR}/lurkmore/wiki-lurkmorewtf_wiki.tar.gz"
-
-# ---------------------------------------------------------------------------
 # V.K. Muller (Mueller7 GPL Ru-En)
 # Note: SourceForge may redirect; curl follows via -L.
 # ---------------------------------------------------------------------------
@@ -115,6 +109,13 @@ echo "Download Mueller directly from SourceForge:  https://sourceforge.net/proje
 # ---------------------------------------------------------------------------
 # OPTIONAL
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Lurkmore XML dump (slang/subculture, CC BY-SA)
+# ---------------------------------------------------------------------------
+# download "https://archive.org/download/wiki-lurkmorewtf/wiki-lurkmorewtf_wiki.tar.gz" \
+#   "${DATA_DIR}/lurkmore/wiki-lurkmorewtf_wiki.tar.gz"
+
 
 # ---------------------------------------------------------------------------
 # Teenslang (youth slang) - link not provided in research; placeholder for future.
