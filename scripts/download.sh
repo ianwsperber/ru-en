@@ -27,7 +27,7 @@ format_bytes() {
         b = b / 1024
         i++
       }
-      printf("%.1f %s", b, unit(i))
+      printf("%.1f %s", b, unit(i+1))
     }'
 }
 
@@ -81,12 +81,6 @@ download "https://kaikki.org/dictionary/Russian/kaikki.org-dictionary-Russian.js
 download "http://opencorpora.org/files/export/dict/dict.opcorpora.xml.bz2" \
   "${DATA_DIR}/opencorpora/dict.opcorpora.xml.bz2"
 
-# ---------------------------------------------------------------------------
-# V.K. Muller (Mueller7 GPL Ru-En)
-# Note: SourceForge may redirect; curl follows via -L.
-# ---------------------------------------------------------------------------
-download "https://downloads.sourceforge.net/project/mueller-dict/mueller-dict/2.4.2/stardict-mueller7accentgpl-2.4.2.tar.bz2" \
-  "${DATA_DIR}/mueller/stardict-mueller7accentgpl-2.4.2.tar.bz2"
 
 # ---------------------------------------------------------------------------
 # Dal & Ushakov DSL bundles (historical + Soviet strata)
@@ -110,6 +104,13 @@ download "https://github.com/gramdict/zalizniak-2010/archive/refs/heads/master.z
 # ---------------------------------------------------------------------------
 download "https://archive.org/download/wiki-lurkmorewtf/wiki-lurkmorewtf_wiki.tar.gz" \
   "${DATA_DIR}/lurkmore/wiki-lurkmorewtf_wiki.tar.gz"
+
+# ---------------------------------------------------------------------------
+# V.K. Muller (Mueller7 GPL Ru-En)
+# Note: SourceForge may redirect; curl follows via -L.
+# ---------------------------------------------------------------------------
+echo "Download Mueller directly from SourceForge:  https://sourceforge.net/projects/mueller-dict/files"
+
 
 # ---------------------------------------------------------------------------
 # OPTIONAL
