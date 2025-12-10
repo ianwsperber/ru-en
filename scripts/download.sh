@@ -105,7 +105,6 @@ download "https://github.com/gramdict/zalizniak-2010/archive/refs/heads/master.z
 # ---------------------------------------------------------------------------
 echo "Download Mueller directly from SourceForge:  https://sourceforge.net/projects/mueller-dict/files"
 
-
 # ---------------------------------------------------------------------------
 # OPTIONAL
 # ---------------------------------------------------------------------------
