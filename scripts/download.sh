@@ -10,6 +10,40 @@ DATA_DIR="${ROOT}/data/raw"
 
 mkdir -p "${DATA_DIR}"
 
+format_bytes() {
+  local bytes="$1"
+  if ! [[ "${bytes}" =~ ^[0-9]+$ ]]; then
+    echo "unknown"
+    return 0
+  fi
+  awk -v b="${bytes}" '
+    function unit(idx) {
+      split("B KB MB GB TB", u, " ")
+      return u[idx]
+    }
+    BEGIN {
+      i = 0
+      while (b >= 1024 && i < 4) {
+        b = b / 1024
+        i++
+      }
+      printf("%.1f %s", b, unit(i))
+    }'
+}
+
+probe_size() {
+  # Usage: probe_size <url>
+  # Returns "unknown" if no Content-Length is available.
+  local url="$1"
+  local length
+  length="$(curl -sI -L "${url}" | awk 'tolower($1)=="content-length:" {gsub("\r","",$2); print $2; exit}')"
+  if [ -z "${length}" ]; then
+    echo "unknown"
+    return 0
+  fi
+  format_bytes "${length}"
+}
+
 download() {
   # Usage: download <url> <output_path>
   local url="$1"
@@ -20,7 +54,13 @@ download() {
     echo "✔ Already downloaded: ${output}"
     return 0
   fi
-  echo "↓ Fetching ${url}"
+  local size_estimate
+  size_estimate="$(probe_size "${url}")"
+  if [ "${size_estimate}" = "unknown" ]; then
+    echo "↓ Fetching ${url} (size: unknown)"
+  else
+    echo "↓ Fetching ${url} (size: ${size_estimate})"
+  fi
   curl -L --fail --retry 3 --retry-delay 2 --continue-at - \
     -o "${tmp}" "${url}"
   mv "${tmp}" "${output}"
